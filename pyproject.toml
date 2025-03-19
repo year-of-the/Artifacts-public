@@ -1,5 +1,5 @@
 [project]
-name = "Artifact-BOXseven-Sonko"
+name = "Artifacts-BOXseven"
 version = "0.1.0"
 dependencies = [
   "certifi==2025.1.31",
