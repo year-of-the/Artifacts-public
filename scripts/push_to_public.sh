@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
 TEMP_BRANCH="temp-public-push"
 PUBLIC_REMOTE="public"

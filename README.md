@@ -43,6 +43,11 @@ If two methods seem more or less interchangeable, always use the **higher level*
 
 - Nothing, this is your work 😊
 
+## Scripts
+
+- `cache_collections.py`: There to front load building up data such as monster and item glossaries.
+- `push_to_public.sh`: Has to do with me keeping my secrets 😜.
+
 # Known issues/shortcomings
 
 - Limited functionality. In it's current state this, is pretty bare bones. I just started...
@@ -51,7 +56,7 @@ If two methods seem more or less interchangeable, always use the **higher level*
 - Not every endpoint of the Artifacts API is wrapped. Notably account management such as creating an account, changing a password, and creating a new API token, are missing.
 - Cached data never expires. That means it could roll over from one season to the next or between patches and include wrong information. **To clear your cached data just delete the `.json` files in the `./cached_data` dir**
 - Multiple machines on same IP will run into each other's rate limits (deal with it).
-- No tests yet.
+- No tests (yet).
 
 The above list isn't exhaustive, please help me improve it.
 
