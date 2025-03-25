@@ -230,13 +230,20 @@ def simulate_battle(character_battle_stats, monster_battle_stats):
     temp_monster_stats = copy.deepcopy(monster_battle_stats)
 
     for round_index in range(50):
-        simulate_turn(temp_char_stats, temp_monster_stats, round_index)
-        simulate_turn(temp_monster_stats, temp_char_stats, round_index)
+        character_turn_num = (round_index*2)+1
+        monster_turn_num = (round_index+1)*2
 
+        simulate_turn(temp_char_stats, temp_monster_stats, round_index)
         if temp_monster_stats["hp"] <= 0:
-            return True, (round_index*2)+1 # round_index to player turn conversion
+            return True, character_turn_num
         elif temp_char_stats["hp"] <= 0:
-            return False, (round_index+1)*2 # round_index to monster turn conversion
+            return False, monster_turn_num
+
+        simulate_turn(temp_monster_stats, temp_char_stats, round_index)
+        if temp_monster_stats["hp"] <= 0:
+            return True, character_turn_num
+        elif temp_char_stats["hp"] <= 0:
+            return False, monster_turn_num
     
     return False, 101 # an impossible turn to indicate what happened
 
