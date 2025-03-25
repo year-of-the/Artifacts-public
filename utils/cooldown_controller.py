@@ -1,10 +1,11 @@
 import time
 from datetime import datetime
 from utils.constants import timeframes, timeframe_milliseconds, rate_limits
+from utils.state import state
 
 class CooldownController:
     def __init__(self):
-        self.active_cooldown = 0
+        self.active_cooldowns = {}
         self.rates = {}
     
     @property
@@ -12,15 +13,19 @@ class CooldownController:
         return int(time.time() * 1000)
     
     @property
+    def active_cooldown(self):
+        return self.active_cooldowns[state.CURRENT_CHARACTER_NAME] if state.CURRENT_CHARACTER_NAME in self.active_cooldowns else 0
+    
+    @property
     def current_cooldown(self):
         return max(self.active_cooldown - self.now, 0)
     
     def set_cooldown(self, milliseconds_remaining=0):
-        if self.active_cooldown < (self.now + milliseconds_remaining): self.active_cooldown = self.now + milliseconds_remaining
+        if self.active_cooldown < (self.now + milliseconds_remaining): self.active_cooldowns[state.CURRENT_CHARACTER_NAME] = self.now + milliseconds_remaining
 
     def set_cooldown_to_future_timestamp(self, timestamp_str):
         epoch_time_of_timestamp = int(1000 * datetime.fromisoformat(timestamp_str.replace('Z', '+00:00')).timestamp())
-        if epoch_time_of_timestamp > self.active_cooldown: self.active_cooldown = epoch_time_of_timestamp
+        if epoch_time_of_timestamp > self.active_cooldown: self.active_cooldowns[state.CURRENT_CHARACTER_NAME] = epoch_time_of_timestamp
 
     def update_rate_limit_history(self, action_type):
         if action_type not in self.rates:

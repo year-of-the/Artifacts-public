@@ -6,7 +6,7 @@ from utils.state import state
 from utils.cooldown_controller import cooldown_controller
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 artifact_api_token = os.environ.get("artifact_api_token")
 artifact_api_host = os.environ.get("artifact_api_host")
@@ -37,8 +37,7 @@ def post_api(path, caller_name=None, body=None):
         cooldown_controller.set_cooldown(milliseconds_remaining=data["data"]["cooldown"]["remaining_seconds"]*1000)
     if new_cooldown_timestamp:
         cooldown_controller.set_cooldown_to_future_timestamp(timestamp_str=new_cooldown_timestamp)
-                                                             
-    cooldown_controller.wait_until_allowed(action_type=FUNCTION_REGISTRY[caller_name])
+
     return data
 
 def get_api(path, caller_name=None, params=None):
@@ -58,7 +57,6 @@ def get_api(path, caller_name=None, params=None):
     if new_cooldown_timestamp:
         cooldown_controller.set_cooldown_to_future_timestamp(timestamp_str=new_cooldown_timestamp)
 
-    cooldown_controller.wait_until_allowed(action_type=FUNCTION_REGISTRY[caller_name])
     return data
 
 # Basic API methods
@@ -527,8 +525,16 @@ def get_achievement(achievement_code):
     if verbose_mode: print("API: Checking achievement information from glossary")
     return get_api(f'achievements/{achievement_code}', func_name)
 
-# Synthetic API methods
-def choose_character(name):
-    if verbose_mode: print(f"Setting '{name}' as current character")
-    state.CURRENT_CHARACTER_NAME = name
-    return get_character(state.CURRENT_CHARACTER_NAME)
+@register("Data")
+def create_character(character_name, skin):
+    func_name = inspect.currentframe().f_code.co_name
+    if verbose_mode: print(f"API: creating a new character {character_name}")
+    return post_api(f'characters/create', func_name, { "name": character_name, "skin": skin })
+
+@register("Data")
+def delete_character(character_name, im_sure=False):
+    if not im_sure:
+        raise Exception(f"Attempted to delete {character_name}, but didn't pass `im_sure` flag to confirm.")
+    func_name = inspect.currentframe().f_code.co_name
+    if verbose_mode: print(f"API: deleting character {character_name}")
+    return post_api(f'characters/delete', func_name, { "name": character_name })

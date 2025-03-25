@@ -149,7 +149,7 @@ def get_monster_stats(monster_code):
         "burn": 0,
     }
 
-def get_character_stats(character_name=state.CURRENT_CHARACTER_NAME):
+def get_character_battle_stats(character_name=state.CURRENT_CHARACTER_NAME):
     response = get_character(character_name)
     character = response["data"]
 
@@ -210,8 +210,9 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index, turn_num):
     # other effects
     if "battle_effects" in entity_stats:
         for effect in entity_stats["battle_effects"]:
-            battle_effect_func = battle_effect_function_glossary[effect["code"]]
-            battle_effect_func(entity_stats, opponent_entity_stats, effect, round_index, turn_num)
+            if effect in relevant_battle_effects:
+                battle_effect_func = battle_effect_function_glossary[effect["code"]]
+                battle_effect_func(entity_stats, opponent_entity_stats, effect, round_index, turn_num)
     
     # attacking
     for attack_type, dmg_multiplier, res_type in [("fire_attack", "fire_dmg", "fire_resist"), ("earth_attack", "earth_dmg", "earth_resist"), ("water_attack", "water_dmg", "water_resist"), ("air_attack", "air_dmg", "air_resist")]:
@@ -250,8 +251,11 @@ def simulate_battle(character_battle_stats, monster_battle_stats):
     
     return False, 101 # an impossible turn to indicate what happened
 
-def simulate_battles(character_name, monster_code, iterations=1000):
-    character_battle_stats = get_character_stats(character_name)
+def simulate_battles(
+        monster_code,
+        character_battle_stats=get_character_battle_stats(state.CURRENT_CHARACTER_NAME),
+        iterations=1000
+    ):
     monster_battle_stats = get_monster_stats(monster_code)
     wins = []
     losses = []
