@@ -8,61 +8,103 @@ item_slots = ["rune_slot","shield_slot","helmet_slot","body_armor_slot","leg_arm
 relevant_battle_effects = ["healing", "lifesteal", "burn", "reconstitution"]
 dots_types = ["poison", "burn"]
 
-def game_round(value: float):
+def game_round(value):
     return math.floor(value + 0.5)
 
 def get_multiplied_attack(attack, dmg_multiplier):
-    return game_round(attack * (1 + (dmg_multiplier*.01)))
+    return game_round(attack * (1 + (dmg_multiplier * 0.01)))
 
 def get_attack_after_resist(attack, defender_resist):
-    return game_round(1-(defender_resist * 0.01) * attack)
+    return game_round(attack * (1 - (defender_resist * 0.01)))
 
 def restore_func(entity_stats, opponent_stats, utility, round_index):
     if entity_stats["hp"] <= game_round(entity_stats["max_hp"]/2) and utility["quantity"] > 0:
-        entity_stats["hp"] += utility["value"]
+        entity_stats["hp"] = min(entity_stats["hp"] + utility["value"], entity_stats["max_hp"])
         utility["quantity"] -= 1
 
 def boost_dmg_fire_func(entity_stats, opponent_stats, utility, round_index):
-    if round_index == 1 and utility["quantity"] > 0:
+    if round_index == 0 and utility["quantity"] > 0:
         entity_stats["fire_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
 def boost_dmg_earth_func(entity_stats, opponent_stats, utility, round_index):
-    if round_index == 1 and utility["quantity"] > 0:
+    if round_index == 0 and utility["quantity"] > 0:
         entity_stats["earth_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
 def boost_dmg_water_func(entity_stats, opponent_stats, utility, round_index):
-    if round_index == 1 and utility["quantity"] > 0:
+    if round_index == 0 and utility["quantity"] > 0:
         entity_stats["water_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
 def boost_dmg_air_func(entity_stats, opponent_stats, utility, round_index):
-    if round_index == 1 and utility["quantity"] > 0:
+    if round_index == 0 and utility["quantity"] > 0:
         entity_stats["air_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
+def boost_res_fire_func(entity_stats, opponent_stats, utility, round_index):
+    if round_index == 0 and utility["quantity"] > 0:
+        entity_stats["fire_resist"] += utility["value"]
+        utility["quantity"] -= 1
+
+def boost_res_earth_func(entity_stats, opponent_stats, utility, round_index):
+    if round_index == 0 and utility["quantity"] > 0:
+        entity_stats["earth_resist"] += utility["value"]
+        utility["quantity"] -= 1
+
+def boost_res_water_func(entity_stats, opponent_stats, utility, round_index):
+    if round_index == 0 and utility["quantity"] > 0:
+        entity_stats["water_resist"] += utility["value"]
+        utility["quantity"] -= 1
+
+def boost_res_air_func(entity_stats, opponent_stats, utility, round_index):
+    if round_index == 0 and utility["quantity"] > 0:
+        entity_stats["air_resist"] += utility["value"]
+        utility["quantity"] -= 1
+
+def boost_hp_func(entity_stats, opponent_stats, utility, round_index):
+    if round_index == 0:
+        entity_stats["hp_max"] += utility["value"]
+        entity_stats["hp"] += utility["value"]
+        utility["quantity"] -= 1
+
 def antipoison_func(entity_stats, opponent_stats, utility, round_index):
-    if "poisoned" in entity_stats and utility["quantity"] > 0:
+    currently_poisoned = "poisoned" in entity_stats and entity_stats["poison"] > 0
+    if currently_poisoned and utility["quantity"] > 0:
         entity_stats["poisoned"] = max(entity_stats["poisoned"] - utility["value"], 0)
         utility["quantity"] -= 1
 
-def burn_func(entity_stats, opponent_stats, effect, round_index):
-    burn_amount = sum([
+def apply_burn_func(entity_stats, opponent_stats, effect, round_index):
+    total_attack = sum([
         get_multiplied_attack(entity_stats["fire_attack"], entity_stats["fire_dmg"]),
         get_multiplied_attack(entity_stats["earth_attack"], entity_stats["earth_dmg"]),
         get_multiplied_attack(entity_stats["water_attack"], entity_stats["water_dmg"]),
         get_multiplied_attack(entity_stats["air_attack"], entity_stats["air_dmg"])
-    ]) * max((effect["value"] - ((round_index - 1) * 10)) * 0.01, 0)
+    ])
+    # round about way to make sure the burn amount decreases
+    burn_amount = max(min(
+        game_round(total_attack * (effect["value"] * (0.9**round_index)) * 0.01),
+        game_round((total_attack * (effect["value"] * (0.9**(round_index-1))) * 0.01) - 1)
+    ),0)
     opponent_stats["burn"] = burn_amount
 
-def poison_func(entity_stats, opponent_stats, effect, round_index):
+def apply_poison_func(entity_stats, opponent_stats, effect, round_index):
     if round_index == 0:
         opponent_stats["poison"] = effect["value"]
 
+def healing_func(entity_stats, opponent_stats, effect, round_index):
+    if round_index % 3 == 2:
+        entity_stats["hp"] = max(entity_stats["max_hp"], game_round(entity_stats["hp"] + (entity_stats["max_hp"] * effect["value"] * 0.01)))
+
+def reconstitution_func(entity_stats, opponent_stats, effect, round_index):
+    if effect["value"] == round_index*2:
+        entity_stats["hp"] = entity_stats["max_hp"]
+
 battle_effect_function_glossary = {
-    "burn": burn_func,
-    "poison": poison_func,
+    "burn": apply_burn_func,
+    "poison": apply_poison_func,
+    "healing": healing_func,
+    "reconstitution": reconstitution_func,
 }
 
 utility_function_glossary = {
@@ -71,6 +113,11 @@ utility_function_glossary = {
     "boost_dmg_earth": boost_dmg_earth_func,
     "boost_dmg_water": boost_dmg_water_func,
     "boost_dmg_air": boost_dmg_air_func,
+    "boost_res_fire": boost_res_fire_func,
+    "boost_res_earth": boost_res_earth_func,
+    "boost_res_water": boost_res_water_func,
+    "boost_res_air": boost_res_air_func,
+    "boost_hp": boost_hp_func,
     "antipoison": antipoison_func,
 }
 
@@ -93,6 +140,9 @@ def get_monster_stats(monster_code):
         "air_resist": monster["res_air"],
         "critical_strike": monster["critical_strike"],
         "battle_effects": monster["effects"],
+        "utilities": [],
+        "poison": 0,
+        "burn": 0,
     }
 
 def get_character_stats(character_name=CURRENT_CHARACTER_NAME):
@@ -113,10 +163,7 @@ def get_character_stats(character_name=CURRENT_CHARACTER_NAME):
         item_code = character[item_slot]
         if item_code != "":
             item = get_one.item(item_code)
-            for effect in item["effects"]:
-                code = effect["code"]
-                if code in relevant_battle_effects:
-                    battle_effects.append(effect)
+            battle_effects += [effect for effect in item["effects"] if effect["code"] in relevant_battle_effects]
     
     return {
         "max_hp": character["max_hp"],
@@ -136,6 +183,8 @@ def get_character_stats(character_name=CURRENT_CHARACTER_NAME):
         "critical_strike": character["critical_strike"],
         "battle_effects": battle_effects,
         "utilities": utilities,
+        "poison": 0,
+        "burn": 0,
     }
 
 def simulate_turn(entity_stats, opponent_entity_stats, round_index):
@@ -150,28 +199,30 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index):
     for dots_type in dots_types:
         if dots_type in entity_stats:
             entity_stats["hp"] -= entity_stats[dots_type]
-
-    # short circuit turn if dead
-    if entity_stats["hp"] <= 0: return
     
     # other effects
     if "battle_effects" in entity_stats:
         for effect in entity_stats["battle_effects"]:
             battle_effect_func = battle_effect_function_glossary[effect["code"]]
             battle_effect_func(entity_stats, opponent_entity_stats, effect, round_index)
+
+    # short circuit turn if dead
+    if entity_stats["hp"] <= 0: return
     
     # attacking
     for attack_type, dmg_multiplier, res_type in [("fire_attack", "fire_dmg", "fire_resist"), ("earth_attack", "earth_dmg", "earth_resist"), ("water_attack", "water_dmg", "water_resist"), ("air_attack", "air_dmg", "air_resist")]:
-        opponent_blocked = randint(1,1000) < opponent_entity_stats[res_type]
+        opponent_blocked = randint(1, 1000) < opponent_entity_stats[res_type]
         if opponent_blocked: continue
 
         is_crit = randint(1,100) < entity_stats["critical_strike"]
         entity_attack = get_multiplied_attack(entity_stats[attack_type], entity_stats[dmg_multiplier])
         opponent_resist = opponent_entity_stats[res_type]
-        opponent_entity_stats["hp"] -= game_round(get_attack_after_resist(entity_attack, opponent_resist) * (1.5 if is_crit else 1))
         lifesteal_effect = next((effect for effect in entity_stats["battle_effects"] if effect["code"] == "lifesteal"), None)
+        actual_damage = game_round(get_attack_after_resist(entity_attack, opponent_resist) * (1.5 if is_crit else 1))
+
+        opponent_entity_stats["hp"] -= actual_damage
         if lifesteal_effect and is_crit:
-            entity_stats["hp"] += game_round(sum(entity_stats["fire_attack", "earth_attack", "water_attack", "air_attack"]) * lifesteal_effect["value"] * 0.01)
+            entity_stats["hp"] += actual_damage
 
 def simulate_battle(character_battle_stats, monster_battle_stats):
     temp_char_stats = copy.deepcopy(character_battle_stats)
@@ -182,11 +233,11 @@ def simulate_battle(character_battle_stats, monster_battle_stats):
         simulate_turn(temp_monster_stats, temp_char_stats, round_index)
 
         if temp_monster_stats["hp"] <= 0:
-            return True, round_index
+            return True, (round_index*2)+1 # round_index to player turn conversion
         elif temp_char_stats["hp"] <= 0:
-            return False, round_index
+            return False, (round_index+1)*2 # round_index to monster turn conversion
     
-    return False, 50
+    return False, 101 # an impossible turn to indicate what happened
 
 def simulate_battles(character_name, monster_code, iterations=1000):
     character_battle_stats = get_character_stats(character_name)
