@@ -2,6 +2,7 @@ import os
 import inspect
 import requests
 from typing import Literal, Optional
+from utils.state import state
 from utils.cooldown_controller import cooldown_controller
 from dotenv import load_dotenv
 
@@ -11,7 +12,6 @@ artifact_api_token = os.environ.get("artifact_api_token")
 artifact_api_host = os.environ.get("artifact_api_host")
 verbose_mode = bool(os.environ.get("verbose"))
 
-CURRENT_CHARACTER_NAME = None
 FUNCTION_REGISTRY = {}
 
 def register(func_type):
@@ -86,133 +86,133 @@ def get_account_details():
 def move(x, y):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print(f'API: Moving to {x}, {y}')
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/move', func_name, { "x": x, "y": y })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/move', func_name, { "x": x, "y": y })
 
 @register("Action")
 def rest():
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Resting")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/rest', func_name)
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/rest', func_name)
 
 @register("Action")
 def fight():
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Fighting")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/fight', func_name)
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/fight', func_name)
 
 @register("Action")
 def equip(item_code, slot, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Equipping item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/equip', func_name, { "code": item_code, "slot": slot, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/equip', func_name, { "code": item_code, "slot": slot, "quantity": quantity })
 
 @register("Action")
 def unequip(slot, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Unequipping item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/unequip', func_name, { "slot": slot, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/unequip', func_name, { "slot": slot, "quantity": quantity })
 
 @register("Action")
 def use_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Using item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/use', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/use', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def craft_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Crafting")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/crafting', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/crafting', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def delete_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Deleting item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/delete', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/delete', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def deposit_gold(quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Depositing gold")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/bank/deposit/gold', func_name, { "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/bank/deposit/gold', func_name, { "quantity": quantity })
 
 @register("Action")
 def deposit_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Depositing item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/bank/deposit', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/bank/deposit', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def withdraw_gold(quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Withdrawing gold")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/bank/withdraw/gold', func_name, { "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/bank/withdraw/gold', func_name, { "quantity": quantity })
 
 @register("Action")
 def withdraw_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Withdrawing item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/bank/withdraw', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/bank/withdraw', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def expand_bank():
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Expanding bank")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/bank/buy_expansion', func_name)
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/bank/buy_expansion', func_name)
 
 @register("Action")
 def buy_npc_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Buying item(s) (from NPC)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/npc/buy', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/npc/buy', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def sell_npc_item(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Selling item(s) (to NPC)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/npc/sell', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/npc/sell', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def recycle(item_code, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Recycling item(s)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/recycle', func_name, { "code": item_code, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/recycle', func_name, { "code": item_code, "quantity": quantity })
 
 @register("Action")
 def buy_exchange_item(order_id, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Buying item(s) (from exchange)")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/grandexchange/buy', func_name, { "id": order_id, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/grandexchange/buy', func_name, { "id": order_id, "quantity": quantity })
 
 @register("Action")
 def create_sell_order_exchange_item(item_code, price, quantity=1):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Creating sell order")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/grandexchange/sell', func_name, { "code": item_code, "price": price, "quantity": quantity })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/grandexchange/sell', func_name, { "code": item_code, "price": price, "quantity": quantity })
 
 @register("Action")
 def cancel_sell_order_exchange_item(order_id):
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Canceling sell order")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/grandexchange/cancel', func_name, { "id": order_id })
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/grandexchange/cancel', func_name, { "id": order_id })
 
 @register("Action")
 def complete_task():
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Completing task")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/task/complete', func_name)
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/task/complete', func_name)
 
 @register("Action")
 def exchange_task():
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Exchanging task for reward")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/task/exchange', func_name)
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/task/exchange', func_name)
 
 @register("Action")
 def accept_new_task():
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print("API: Accepting new task")
-    return post_api(f'my/{CURRENT_CHARACTER_NAME}/action/task/new', func_name)
+    return post_api(f'my/{state.CURRENT_CHARACTER_NAME}/action/task/new', func_name)
 
 @register("Data")
 def list_logs(page=1, page_size=100):
@@ -228,8 +228,7 @@ def list_characters():
 
 @register("Data")
 def get_character(name=None):
-    global CURRENT_CHARACTER_NAME
-    if name == None: name = CURRENT_CHARACTER_NAME
+    if name == None: name = state.CURRENT_CHARACTER_NAME
     func_name = inspect.currentframe().f_code.co_name
     if verbose_mode: print(f'API: Getting information about {name}')
     return get_api(f'characters/{name}', func_name)
@@ -521,6 +520,5 @@ def get_achievement(achievement_code):
 # Synthetic API methods
 def choose_character(name):
     if verbose_mode: print(f"Setting '{name}' as current character")
-    global CURRENT_CHARACTER_NAME
-    CURRENT_CHARACTER_NAME = name
-    return get_character(CURRENT_CHARACTER_NAME)
+    state.CURRENT_CHARACTER_NAME = name
+    return get_character(state.CURRENT_CHARACTER_NAME)

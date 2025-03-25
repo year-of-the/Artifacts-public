@@ -1,7 +1,8 @@
 import math
 import copy
 from random import randint
-from utils.api import get_character, CURRENT_CHARACTER_NAME
+from utils.state import state
+from utils.api import get_character
 from macros import get_one
 
 item_slots = ["rune_slot","shield_slot","helmet_slot","body_armor_slot","leg_armor_slot","boots_slot","ring1_slot","ring2_slot","amulet_slot","artifact1_slot","artifact2_slot","artifact3_slot"]
@@ -145,7 +146,7 @@ def get_monster_stats(monster_code):
         "burn": 0,
     }
 
-def get_character_stats(character_name=CURRENT_CHARACTER_NAME):
+def get_character_stats(character_name=state.CURRENT_CHARACTER_NAME):
     response = get_character(character_name)
     character = response["data"]
 
