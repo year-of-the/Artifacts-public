@@ -18,87 +18,90 @@ def get_multiplied_attack(attack, dmg_multiplier):
 def get_attack_after_resist(attack, defender_resist):
     return game_round(attack * (1 - (defender_resist * 0.01)))
 
-def restore_func(entity_stats, opponent_stats, utility, round_index):
+def restore_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if entity_stats["hp"] <= game_round(entity_stats["max_hp"]/2) and utility["quantity"] > 0:
         entity_stats["hp"] = min(entity_stats["hp"] + utility["value"], entity_stats["max_hp"])
         utility["quantity"] -= 1
 
-def boost_dmg_fire_func(entity_stats, opponent_stats, utility, round_index):
+def boost_dmg_fire_func(entity_stats, opponent_stats, utility, round_index, turn_num):
+    round_index = math.floor((turn_num-1)/2)
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["fire_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_dmg_earth_func(entity_stats, opponent_stats, utility, round_index):
+def boost_dmg_earth_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["earth_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_dmg_water_func(entity_stats, opponent_stats, utility, round_index):
+def boost_dmg_water_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["water_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_dmg_air_func(entity_stats, opponent_stats, utility, round_index):
+def boost_dmg_air_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["air_dmg"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_res_fire_func(entity_stats, opponent_stats, utility, round_index):
+def boost_res_fire_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["fire_resist"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_res_earth_func(entity_stats, opponent_stats, utility, round_index):
+def boost_res_earth_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["earth_resist"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_res_water_func(entity_stats, opponent_stats, utility, round_index):
+def boost_res_water_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["water_resist"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_res_air_func(entity_stats, opponent_stats, utility, round_index):
+def boost_res_air_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0 and utility["quantity"] > 0:
         entity_stats["air_resist"] += utility["value"]
         utility["quantity"] -= 1
 
-def boost_hp_func(entity_stats, opponent_stats, utility, round_index):
+def boost_hp_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     if round_index == 0:
         entity_stats["hp_max"] += utility["value"]
         entity_stats["hp"] += utility["value"]
         utility["quantity"] -= 1
 
-def antipoison_func(entity_stats, opponent_stats, utility, round_index):
+def antipoison_func(entity_stats, opponent_stats, utility, round_index, turn_num):
     currently_poisoned = "poisoned" in entity_stats and entity_stats["poison"] > 0
     if currently_poisoned and utility["quantity"] > 0:
         entity_stats["poisoned"] = max(entity_stats["poisoned"] - utility["value"], 0)
         utility["quantity"] -= 1
 
-def apply_burn_func(entity_stats, opponent_stats, effect, round_index):
+def apply_burn_func(entity_stats, opponent_stats, effect, round_index, turn_num):
     total_attack = sum([
         get_multiplied_attack(entity_stats["fire_attack"], entity_stats["fire_dmg"]),
         get_multiplied_attack(entity_stats["earth_attack"], entity_stats["earth_dmg"]),
         get_multiplied_attack(entity_stats["water_attack"], entity_stats["water_dmg"]),
         get_multiplied_attack(entity_stats["air_attack"], entity_stats["air_dmg"])
     ])
-    # round about way to make sure the burn amount decreases
-    burn_amount = max(min(
-        game_round(total_attack * (effect["value"] * (0.9**round_index)) * 0.01),
-        game_round((total_attack * (effect["value"] * (0.9**(round_index-1))) * 0.01) - 1)
-    ), 0)
+
+    burn_percent = effect["value"]
+    burn_amount = game_round(total_attack * burn_percent * 0.01)
+
+    for _ in range(round_index):
+        burn_amount = max(min(game_round(burn_amount * 0.09), burn_amount - 1), 0)
+    
     opponent_stats["burn"] = burn_amount
 
-def apply_poison_func(entity_stats, opponent_stats, effect, round_index):
+def apply_poison_func(entity_stats, opponent_stats, effect, round_index, turn_num):
     if round_index == 0:
         opponent_stats["poison"] = effect["value"]
 
-def healing_func(entity_stats, opponent_stats, effect, round_index):
+def healing_func(entity_stats, opponent_stats, effect, round_index, turn_num):
     if round_index % 3 == 2:
         entity_stats["hp"] = max(entity_stats["max_hp"], game_round(entity_stats["hp"] + (entity_stats["max_hp"] * effect["value"] * 0.01)))
 
-def reconstitution_func(entity_stats, opponent_stats, effect, round_index):
-    if effect["value"] == round_index*2:
+def reconstitution_func(entity_stats, opponent_stats, effect, round_index, turn_num):
+    if effect["value"] == turn_num:
         entity_stats["hp"] = entity_stats["max_hp"]
 
 battle_effect_function_glossary = {
@@ -188,13 +191,13 @@ def get_character_stats(character_name=state.CURRENT_CHARACTER_NAME):
         "burn": 0,
     }
 
-def simulate_turn(entity_stats, opponent_entity_stats, round_index):
+def simulate_turn(entity_stats, opponent_entity_stats, round_index, turn_num):
     # utilities
     if "utilities" in entity_stats:
         for utility in entity_stats["utilities"]:
             if utility["quantity"] > 0:
                 utility_func = utility_function_glossary[utility["code"]]
-                utility_func(entity_stats, opponent_entity_stats, utility, round_index)
+                utility_func(entity_stats, opponent_entity_stats, utility, round_index, turn_num)
     
     # applying dots
     for dots_type in dots_types:
@@ -208,14 +211,14 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index):
     if "battle_effects" in entity_stats:
         for effect in entity_stats["battle_effects"]:
             battle_effect_func = battle_effect_function_glossary[effect["code"]]
-            battle_effect_func(entity_stats, opponent_entity_stats, effect, round_index)
+            battle_effect_func(entity_stats, opponent_entity_stats, effect, round_index, turn_num)
     
     # attacking
     for attack_type, dmg_multiplier, res_type in [("fire_attack", "fire_dmg", "fire_resist"), ("earth_attack", "earth_dmg", "earth_resist"), ("water_attack", "water_dmg", "water_resist"), ("air_attack", "air_dmg", "air_resist")]:
-        opponent_blocked = randint(1, 1000) < opponent_entity_stats[res_type]
+        opponent_blocked = randint(1, 1000) <= opponent_entity_stats[res_type]
         if opponent_blocked: continue
 
-        is_crit = randint(1,100) < entity_stats["critical_strike"]
+        is_crit = randint(1, 100) <= entity_stats["critical_strike"]
         entity_attack = get_multiplied_attack(entity_stats[attack_type], entity_stats[dmg_multiplier])
         opponent_resist = opponent_entity_stats[res_type]
         lifesteal_effect = next((effect for effect in entity_stats["battle_effects"] if effect["code"] == "lifesteal"), None)
@@ -223,7 +226,7 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index):
 
         opponent_entity_stats["hp"] -= actual_damage
         if lifesteal_effect and is_crit:
-            entity_stats["hp"] += actual_damage
+            entity_stats["hp"] += game_round(actual_damage * lifesteal_effect["value"])
 
 def simulate_battle(character_battle_stats, monster_battle_stats):
     temp_char_stats = copy.deepcopy(character_battle_stats)
@@ -233,13 +236,13 @@ def simulate_battle(character_battle_stats, monster_battle_stats):
         character_turn_num = (round_index*2)+1
         monster_turn_num = (round_index+1)*2
 
-        simulate_turn(temp_char_stats, temp_monster_stats, round_index)
+        simulate_turn(temp_char_stats, temp_monster_stats, round_index, character_turn_num)
         if temp_monster_stats["hp"] <= 0:
             return True, character_turn_num
         elif temp_char_stats["hp"] <= 0:
             return False, character_turn_num
 
-        simulate_turn(temp_monster_stats, temp_char_stats, round_index)
+        simulate_turn(temp_monster_stats, temp_char_stats, round_index, monster_turn_num)
         if temp_monster_stats["hp"] <= 0:
             return True, monster_turn_num
         elif temp_char_stats["hp"] <= 0:
