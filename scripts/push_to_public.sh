@@ -1,23 +1,19 @@
 #!/bin/bash
 
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-TEMP_BRANCH="temp-public-push-$(date +%s)"
 PUBLIC_REMOTE="public"
-LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+export GIT_INDEX_FILE=.git/index.public.tmp
 
-git stash push --include-untracked --quiet
-git checkout -b $TEMP_BRANCH
+echo "Pushing to $PUBLIC_REMOTE without *.private.py files..."
 
-PRIVATE_FILES=$(git ls-files "*.private.py")
+git read-tree HEAD
+git ls-files "*.private.py" | xargs -r git update-index --force-remove --
+TREE=$(git write-tree)
+PARENT=$(git rev-parse HEAD)
+COMMIT_MSG=$(git log -1 --pretty=%B)
+COMMIT=$(git commit-tree $TREE -p $PARENT -m "$COMMIT_MSG")
+git push $PUBLIC_REMOTE $COMMIT:refs/heads/$CURRENT_BRANCH
+rm -f .git/index.public.tmp
+unset GIT_INDEX_FILE
 
-if [ -n "$PRIVATE_FILES" ]; then
-    for file in $PRIVATE_FILES; do
-        git rm --cached "$file"
-    done
-    git commit -m "$LAST_COMMIT_MSG"
-fi
-
-git push -f $PUBLIC_REMOTE $TEMP_BRANCH:$CURRENT_BRANCH
-git checkout $CURRENT_BRANCH
-git stash pop --quiet
-git branch -D $TEMP_BRANCH 2>/dev/null || echo "Note: Could not delete temporary branch. This is OK."
+echo "Successfully pushed filtered commit to $PUBLIC_REMOTE/$CURRENT_BRANCH"
