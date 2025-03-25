@@ -237,11 +237,11 @@ def simulate_battle(character_battle_stats, monster_battle_stats):
         if temp_monster_stats["hp"] <= 0:
             return True, character_turn_num
         elif temp_char_stats["hp"] <= 0:
-            return False, monster_turn_num
+            return False, character_turn_num
 
         simulate_turn(temp_monster_stats, temp_char_stats, round_index)
         if temp_monster_stats["hp"] <= 0:
-            return True, character_turn_num
+            return True, monster_turn_num
         elif temp_char_stats["hp"] <= 0:
             return False, monster_turn_num
     
