@@ -200,15 +200,15 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index):
     for dots_type in dots_types:
         if dots_type in entity_stats:
             entity_stats["hp"] -= entity_stats[dots_type]
+
+    # short circuit turn if dead
+    if entity_stats["hp"] <= 0: return
     
     # other effects
     if "battle_effects" in entity_stats:
         for effect in entity_stats["battle_effects"]:
             battle_effect_func = battle_effect_function_glossary[effect["code"]]
             battle_effect_func(entity_stats, opponent_entity_stats, effect, round_index)
-
-    # short circuit turn if dead
-    if entity_stats["hp"] <= 0: return
     
     # attacking
     for attack_type, dmg_multiplier, res_type in [("fire_attack", "fire_dmg", "fire_resist"), ("earth_attack", "earth_dmg", "earth_resist"), ("water_attack", "water_dmg", "water_resist"), ("air_attack", "air_dmg", "air_resist")]:
