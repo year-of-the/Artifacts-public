@@ -12,12 +12,16 @@ load_dotenv()
 verbose_mode = bool(os.environ.get("verbose"))
 
 def main():
-    sonko = get_character("Sonko")["data"]
-    monster = get_one.monster("yellow_slime")
-    print(monster["hp"], monster["res_earth"], monster["attack_earth"])
-    print(sonko["hp"], sonko["res_earth"], sonko["attack_earth"])
-    print("VS yellow_slime", simulate_battles("Sonko", "yellow_slime"))
-    print("VS cow", simulate_battles("Sonko", "cow"))
+    # sonko = get_character("Sonko")["data"]
+    # monster = get_one.monster("yellow_slime")
+    # print(monster["hp"], monster["res_earth"], monster["attack_earth"])
+    # print(sonko["hp"], sonko["res_earth"], sonko["attack_earth"])
+    # print("VS yellow_slime", simulate_battles("Sonko", "yellow_slime"))
+    # print("VS cow", simulate_battles("Sonko", "cow"))
+    sonko = choose_character("Sonko")
+
+    move(0,0)
+    move(10,10)
 
 if __name__ == "__main__":
     main()

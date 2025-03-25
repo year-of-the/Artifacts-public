@@ -22,6 +22,7 @@ def register(func_type):
 
 # HTTP helper methods
 def post_api(path, caller_name=None, body=None):
+    cooldown_controller.wait_until_allowed(action_type=FUNCTION_REGISTRY[caller_name])
     url = f'{artifact_api_host}/{path}'
     response = requests.post(url=url, json=body, headers={ "Authorization": "Bearer " + artifact_api_token })
     data = response.json()
@@ -30,13 +31,18 @@ def post_api(path, caller_name=None, body=None):
 
     cooldown_controller.tally_action(FUNCTION_REGISTRY[caller_name])
     new_cooldown_set = "cooldown" in data["data"] and isinstance(data["data"]["cooldown"], dict) and "remaining_seconds" in data["data"]["cooldown"]
+    new_cooldown_timestamp = data["data"]["cooldown_expiration"] if "cooldown_expiration" in data["data"] else None
 
     if new_cooldown_set:
         cooldown_controller.set_cooldown(milliseconds_remaining=data["data"]["cooldown"]["remaining_seconds"]*1000)
+    if new_cooldown_timestamp:
+        cooldown_controller.set_cooldown_to_future_timestamp(timestamp_str=new_cooldown_timestamp)
+                                                             
     cooldown_controller.wait_until_allowed(action_type=FUNCTION_REGISTRY[caller_name])
     return data
 
 def get_api(path, caller_name=None, params=None):
+    cooldown_controller.wait_until_allowed(action_type=FUNCTION_REGISTRY[caller_name])
     url = f'{artifact_api_host}/{path}'
     response = requests.get(url=url, params=params, headers={ "Authorization": "Bearer " + artifact_api_token })
     data = response.json()
@@ -45,9 +51,13 @@ def get_api(path, caller_name=None, params=None):
 
     cooldown_controller.tally_action(FUNCTION_REGISTRY[caller_name])
     new_cooldown_set = "cooldown" in data["data"] and isinstance(data["data"]["cooldown"], dict) and "remaining_seconds" in data["data"]["cooldown"]
+    new_cooldown_timestamp = data["data"]["cooldown_expiration"] if "cooldown_expiration" in data["data"] else None
 
     if new_cooldown_set:
         cooldown_controller.set_cooldown(milliseconds_remaining=data["data"]["cooldown"]["remaining_seconds"]*1000)
+    if new_cooldown_timestamp:
+        cooldown_controller.set_cooldown_to_future_timestamp(timestamp_str=new_cooldown_timestamp)
+
     cooldown_controller.wait_until_allowed(action_type=FUNCTION_REGISTRY[caller_name])
     return data
 

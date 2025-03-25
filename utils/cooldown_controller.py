@@ -1,6 +1,6 @@
 import time
+from datetime import datetime
 from utils.constants import timeframes, timeframe_milliseconds, rate_limits
-import utils.api as api
 
 class CooldownController:
     def __init__(self):
@@ -16,7 +16,11 @@ class CooldownController:
         return max(self.active_cooldown - self.now, 0)
     
     def set_cooldown(self, milliseconds_remaining=0):
-        self.active_cooldown = self.now + milliseconds_remaining
+        if self.active_cooldown < (self.now + milliseconds_remaining): self.active_cooldown = self.now + milliseconds_remaining
+
+    def set_cooldown_to_future_timestamp(self, timestamp_str):
+        epoch_time_of_timestamp = int(1000 * datetime.fromisoformat(timestamp_str.replace('Z', '+00:00')).timestamp())
+        if epoch_time_of_timestamp > self.active_cooldown: self.active_cooldown = epoch_time_of_timestamp
 
     def update_rate_limit_history(self, action_type):
         if action_type not in self.rates:

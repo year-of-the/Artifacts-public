@@ -86,7 +86,7 @@ def apply_burn_func(entity_stats, opponent_stats, effect, round_index):
     burn_amount = max(min(
         game_round(total_attack * (effect["value"] * (0.9**round_index)) * 0.01),
         game_round((total_attack * (effect["value"] * (0.9**(round_index-1))) * 0.01) - 1)
-    ),0)
+    ), 0)
     opponent_stats["burn"] = burn_amount
 
 def apply_poison_func(entity_stats, opponent_stats, effect, round_index):
