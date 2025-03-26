@@ -88,7 +88,7 @@ def apply_burn_func(entity_stats, opponent_stats, effect, round_index, turn_num)
     burn_amount = game_round(total_attack * burn_percent * 0.01)
 
     for _ in range(round_index):
-        burn_amount = max(min(game_round(burn_amount * 0.09), burn_amount - 1), 0)
+        burn_amount = max(min(game_round(burn_amount * 0.9), burn_amount - 1), 0)
     
     opponent_stats["burn"] = burn_amount
 
@@ -227,7 +227,7 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index, turn_num):
 
         opponent_entity_stats["hp"] -= actual_damage
         if lifesteal_effect and is_crit:
-            entity_stats["hp"] += game_round(actual_damage * lifesteal_effect["value"])
+            entity_stats["hp"] += game_round(actual_damage * 0.1 * lifesteal_effect["value"])
 
 def simulate_battle(character_battle_stats, monster_battle_stats):
     temp_char_stats = copy.deepcopy(character_battle_stats)
