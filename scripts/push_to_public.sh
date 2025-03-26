@@ -12,7 +12,7 @@ TREE=$(git write-tree)
 PARENT=$(git rev-parse HEAD)
 COMMIT_MSG=$(git log -1 --pretty=%B)
 COMMIT=$(git commit-tree $TREE -p $PARENT -m "$COMMIT_MSG")
-git push $PUBLIC_REMOTE $COMMIT:refs/heads/$CURRENT_BRANCH
+git push -f $PUBLIC_REMOTE $COMMIT:refs/heads/$CURRENT_BRANCH
 rm -f .git/index.public.tmp
 unset GIT_INDEX_FILE
 
