@@ -103,7 +103,7 @@ def apply_poison_func(entity_stats, opponent_stats, effect, round_index, turn_nu
 
 def healing_func(entity_stats, opponent_stats, effect, round_index, turn_num):
     if round_index % 3 == 2:
-        entity_stats["hp"] = max(entity_stats["max_hp"], game_round(entity_stats["hp"] + (entity_stats["max_hp"] * effect["value"] * 0.01)))
+        entity_stats["hp"] = min(entity_stats["max_hp"], game_round(entity_stats["hp"] + (entity_stats["max_hp"] * effect["value"] * 0.01)))
 
 def reconstitution_func(entity_stats, opponent_stats, effect, round_index, turn_num):
     if effect["value"] == turn_num:
@@ -232,7 +232,7 @@ def simulate_turn(entity_stats, opponent_entity_stats, round_index, turn_num):
 
         opponent_entity_stats["hp"] -= actual_damage
         if lifesteal_effect and is_crit:
-            entity_stats["hp"] += game_round(actual_damage * 0.1 * lifesteal_effect["value"])
+            entity_stats["hp"] = min(entity_stats["max_hp"], entity_stats["hp"] + game_round(actual_damage * 0.1 * lifesteal_effect["value"]))
 
 def simulate_battle(character_battle_stats, monster_battle_stats):
     temp_char_stats = copy.deepcopy(character_battle_stats)
