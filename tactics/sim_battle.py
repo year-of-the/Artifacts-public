@@ -87,7 +87,12 @@ def apply_burn_func(entity_stats, opponent_stats, effect, round_index, turn_num)
     burn_percent = effect["value"]
     burn_amount = game_round(total_attack * burn_percent * 0.01)
 
-    for _ in range(round_index):
+    staggered_round_index = round_index - (max(turn_num - 2, 0) % 2)
+    # this math means the sequence of range upper bounds marches with the turn as such
+    # turn:     1 2 3 4 5 6 7 8 9 ...
+    # sequence: 0 0 0 1 1 2 2 3 3 ...
+    # thus, exactly matching the number of times burn damage diminishment should happen if burn dmg occurred on that turn
+    for _ in range(staggered_round_index):
         burn_amount = max(min(game_round(burn_amount * 0.9), burn_amount - 1), 0)
     
     opponent_stats["burn"] = burn_amount
