@@ -21,7 +21,7 @@ def missing_requirements_to_craft(item_code):
         "missing_ingredients": [
             {
                 **item,
-                "missing_quantity": max(0, item["quantity"] - next((i for i in inventory if i["code"] == item["code"]), 0)),
+                "missing_quantity": max(0, item["quantity"] - next((i["quantity"] for i in inventory if i["code"] == item["code"]), 0)),
             } for item in required_ingredients
         ]
     }

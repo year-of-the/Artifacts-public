@@ -18,7 +18,7 @@ logger = logging.getLogger()
 def main():
     character_name = "Sonko"
     choose_character(character_name)
-    result = missing_requirements_to_craft("fire_staff")
+    result = missing_requirements_to_craft("fried_eggs")
     missing_resources = [resource for resource in result["missing_ingredients"] if resource["missing_quantity"] > 0]
     for missing in missing_resources:
         logger.info(resource_finder(missing["code"]))
