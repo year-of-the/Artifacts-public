@@ -258,7 +258,7 @@ def simulate_battle(character_battle_stats, monster_battle_stats):
 
 def simulate_battles(
         monster_code,
-        character_battle_stats=get_character_battle_stats(state.CURRENT_CHARACTER_NAME),
+        character_battle_stats,
         iterations=1000
     ):
     monster_battle_stats = get_monster_stats(monster_code)

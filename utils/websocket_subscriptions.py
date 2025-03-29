@@ -2,9 +2,11 @@ import os
 import asyncio
 import websockets
 import json
+import logging
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
+logger = logging.getLogger()
 
 artifact_api_token = os.environ.get("artifact_api_token")
 artifact_ws_host = os.environ.get("artifact_ws_host")
@@ -18,7 +20,7 @@ async def receive_messages():
     async with websockets.connect(artifact_ws_host) as websocket:
         await websocket.send(json.dumps(message))
 
-        print("Connected to the WebSocket server")
+        logger.info("Connected to the WebSocket server")
         try:
             while True:
                 message_received = await websocket.recv()
@@ -27,6 +29,6 @@ async def receive_messages():
                 # TODO: add callback registry so callbacks can be triggered when messages are received here
 
         except websockets.ConnectionClosed:
-            print("Connection closed by the server")
+            logger.info("Connection closed by the server")
 
 asyncio.run(receive_messages())

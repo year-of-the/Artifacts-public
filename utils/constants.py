@@ -8,6 +8,7 @@ TASK_CACHE_FILE_NAME = "tasks.json"
 TASK_REWARD_CACHE_FILE_NAME = "task_rewards.json"
 NPC_CACHE_FILE_NAME = "npcs.json"
 MONSTER_DROP_CACHE_FILE_NAME = lambda item_code: f'monsters_that_drop_{item_code}.json'
+RESOURCE_DROP_CACHE_FILE_NAME = lambda item_code: f'resources_that_drop_{item_code}.json'
 ITEM_CACHE_FILE_NAME = "items.json"
 CHARACTER_BASE_HP = 115;
 CHARACTER_HP_PER_LEVEL = 5;

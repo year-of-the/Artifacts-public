@@ -1,7 +1,20 @@
 import os
 import json
 from macros.repeat import repeatedly
-from utils.constants import MONSTER_CACHE_FILE_NAME, RESOURCE_CACHE_FILE_NAME, EVENT_CACHE_FILE_NAME, ACHIEVEMENT_CACHE_FILE_NAME, EFFECT_CACHE_FILE_NAME, TASK_CACHE_FILE_NAME, TASK_REWARD_CACHE_FILE_NAME, NPC_CACHE_FILE_NAME, MONSTER_DROP_CACHE_FILE_NAME, ITEM_CACHE_FILE_NAME, BADGE_CACHE_FILE_NAME
+from utils.constants import (
+        MONSTER_CACHE_FILE_NAME,
+        RESOURCE_CACHE_FILE_NAME,
+        EVENT_CACHE_FILE_NAME,
+        ACHIEVEMENT_CACHE_FILE_NAME,
+        EFFECT_CACHE_FILE_NAME,
+        TASK_CACHE_FILE_NAME,
+        TASK_REWARD_CACHE_FILE_NAME,
+        NPC_CACHE_FILE_NAME,
+        ITEM_CACHE_FILE_NAME,
+        BADGE_CACHE_FILE_NAME,
+        MONSTER_DROP_CACHE_FILE_NAME,
+        RESOURCE_DROP_CACHE_FILE_NAME
+    )
 import utils.api as api
 
 def get_all(paginated_list_api_func, data_file_name=None, cache=True):
@@ -40,6 +53,21 @@ def get_all(paginated_list_api_func, data_file_name=None, cache=True):
 def resources():
     return get_all(api.list_resources, RESOURCE_CACHE_FILE_NAME)
 
+def resources_that_drop_item(item_code):
+    return get_all(
+        paginated_list_api_func=lambda page, page_size: api.list_resources(page=page, page_size=page_size, drop_code=item_code),
+        data_file_name=RESOURCE_DROP_CACHE_FILE_NAME(item_code=item_code)
+    )
+
+def monsters():
+    return get_all(api.list_monsters, MONSTER_CACHE_FILE_NAME)
+
+def monsters_that_drop_item(item_code):
+    return get_all(
+        paginated_list_api_func=lambda page, page_size: api.list_monsters(page=page, page_size=page_size, item_drop_code=item_code),
+        data_file_name=MONSTER_DROP_CACHE_FILE_NAME(item_code=item_code)
+    )
+
 def active_events():
     return get_all(paginated_list_api_func=api.list_active_events, cache=False)
 
@@ -64,15 +92,6 @@ def task_rewards():
 def npcs():
     return get_all(api.list_npcs, NPC_CACHE_FILE_NAME)
 
-def monsters():
-    return get_all(api.list_monsters, MONSTER_CACHE_FILE_NAME)
-
-def monsters_that_drop_item(item_code):
-    return get_all(
-        paginated_list_api_func=lambda x: api.list_monsters(page=x, item_drop_code=item_code),
-        file_path=MONSTER_DROP_CACHE_FILE_NAME(item_code=item_code)
-    )
-
 def items():
     return get_all(api.list_items, ITEM_CACHE_FILE_NAME)
 
@@ -94,11 +113,14 @@ def banks_on_map():
 def exchanges_on_map():
     return get_all(paginated_list_api_func=api.get_grand_exchanges_on_map, cache=False)
 
-def masters_on_map():
+def task_masters_on_map():
     return get_all(paginated_list_api_func=api.get_tasks_masters_on_map, cache=False)
 
 def npcs_on_map():
     return get_all(paginated_list_api_func=api.get_npcs_on_map, cache=False)
+
+def content_on_map(content_code):
+    return get_all(paginated_list_api_func=lambda page, page_size: api.get_content_locations_on_map(page=page, page_size=page_size, content_code=content_code), cache=False)
 
 def listings():
     return get_all(paginated_list_api_func=api.list_listings, cache=False)
